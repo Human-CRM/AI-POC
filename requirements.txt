@@ -1,0 +1,22 @@
+#API
+fastapi[standard]
+pydantic
+uvicorn[standard]
+
+# Misc
+numpy
+dotenv
+typing
+typing-extensions
+
+# Graph maker
+langgraph
+langchain-anthropic
+
+# Tools
+tavily-python
+langchain-community
+
+# Front
+streamlit
+requests

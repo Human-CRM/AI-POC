@@ -1,0 +1,35 @@
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/24
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: back.dockerfile
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    networks:
+      - my-network
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      APOLLO_API_KEY: ${APOLLO_API_KEY}
+  
+  # Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: front.dockerfile
+    container_name: streamlit-app
+    ports:
+      - "8501:8501"
+    networks:
+      - my-network
+
+  
