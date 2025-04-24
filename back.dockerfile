@@ -7,5 +7,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY back ./back
+COPY basic_json ./apollo/organizations
 
 CMD ["python", "back"]
