@@ -14,6 +14,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_core.tools import tool
 import datetime as dt
+from .excel_manager import get_companies
 
 # Memory
 from langgraph.checkpoint.memory import MemorySaver
@@ -128,10 +129,20 @@ def get_company_info_from_database(domain:str) -> dict:
             "error": f"Failed to load data for company '{domain}'."
         }
 
+
+def get_companies_in_database() -> list[str]:
+    """
+    To retrieve the list of companies that you have in your database.
+    The function returns a list of domains of companies in your database.
+    """
+    return get_companies()
+
+
 def create_tools() -> list:
     load_dotenv()
     web_search_tool = TavilySearchResults(max_results=2)
-    return [web_search_tool, rag, get_company_info_from_database, enrich_company_info]
+    return [web_search_tool, rag, get_companies_in_database, get_company_info_from_database, enrich_company_info]
+
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]

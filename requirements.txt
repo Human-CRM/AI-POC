@@ -20,6 +20,9 @@ langchain-community
 # Metrics
 langfuse
 
+# Database (Excel)
+openpyxl
+
 # Front
 streamlit
 requests
