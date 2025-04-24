@@ -2,8 +2,6 @@ from typing import Annotated
 
 from typing_extensions import TypedDict
 
-from dotenv import load_dotenv
-
 # Framework
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
@@ -19,6 +17,9 @@ import datetime as dt
 
 # Memory
 from langgraph.checkpoint.memory import MemorySaver
+
+# Metrics
+from langfuse.callback import CallbackHandler
 
 # Misc
 from typing import Annotated
@@ -127,10 +128,10 @@ def get_company_info_from_database(domain:str) -> dict:
             "error": f"Failed to load data for company '{domain}'."
         }
 
-load_dotenv()
-web_search_tool = TavilySearchResults(max_results=2)
-tools = [web_search_tool, rag, get_company_info_from_database, enrich_company_info]
-
+def create_tools() -> list:
+    load_dotenv()
+    web_search_tool = TavilySearchResults(max_results=2)
+    return [web_search_tool, rag, get_company_info_from_database, enrich_company_info]
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
@@ -147,6 +148,7 @@ def setup_graph():
 
     available_models = ["claude-3-haiku-20240307","claude-3-5-haiku-20241022"]
     chosen_model = 0
+    tools = create_tools()
     # Initialize
     memory = MemorySaver()
     llm = ChatAnthropic(model=available_models[chosen_model], api_key=get_anthropic_key())        # Using cheapest model
@@ -178,6 +180,11 @@ def setup_graph():
     return graph
 
 
+# Initialize Langfuse CallbackHandler for Langchain (tracing)
+def create_handler() -> CallbackHandler:
+    load_dotenv()
+    return CallbackHandler()
+
 def stream_graph_updates(graph: CompiledStateGraph, user_input: str, config):
     events = graph.stream(
             {"messages": [{"role": "user", "content": user_input}]},
@@ -192,9 +199,18 @@ def stream_graph_updates(graph: CompiledStateGraph, user_input: str, config):
 
     return messages
 
-
 def run_chatbot(user_input:str, graph: CompiledStateGraph):
-    thread_config={"configurable": {"thread_id": "1"}}
+    langfuse_handler = create_handler()
+    thread_id = 1
+    user = "My User"
+    thread_config={
+        "configurable": {"thread_id": thread_id},
+        "callbacks": [langfuse_handler],
+        "metadata": {
+            "langfuse_session_id": thread_id,
+            "langfuse_user_id": user,
+            },
+        }
     if user_input.lower() in ["quit", "exit", "q"]:
         print("Goodbye!")
     return stream_graph_updates(graph, user_input, thread_config)

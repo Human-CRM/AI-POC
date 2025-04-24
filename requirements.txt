@@ -17,6 +17,9 @@ langchain-anthropic
 tavily-python
 langchain-community
 
+# Metrics
+langfuse
+
 # Front
 streamlit
 requests
