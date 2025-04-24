@@ -57,22 +57,6 @@ def get_apollo_key():
 # Tools
 #
 
-# Need to change this and actually implement it as a rag rather than as a tool
-@tool
-def rag() -> dict:
-    """
-    Function returning informations regarding the agent's purposes, informations about him.
-    You can use this tool extensively, to always ensure you're on track with what you must or musn't do.
-    It's a good practice to use this tool at the begining of a conversation to know more about yourself.
-    """
-    return {
-        "name":"Alfred",
-        "background":"You were developped by Hugo Bonnell, an engineer.",
-        "rules": [
-            "Always make sure you're check the right tools before doing so.",
-        ],
-    }
-
 @tool
 def enrich_company_info(domain:str) -> dict:
     """
@@ -141,7 +125,7 @@ def get_companies_in_database() -> list[str]:
 def create_tools() -> list:
     load_dotenv()
     web_search_tool = TavilySearchResults(max_results=2)
-    return [web_search_tool, rag, get_companies_in_database, get_company_info_from_database, enrich_company_info]
+    return [web_search_tool, get_companies_in_database, get_company_info_from_database, enrich_company_info]
 
 
 class State(TypedDict):
@@ -196,9 +180,21 @@ def create_handler() -> CallbackHandler:
     load_dotenv()
     return CallbackHandler()
 
+
 def stream_graph_updates(graph: CompiledStateGraph, user_input: str, config):
+    system_message = {
+        "role":"system",
+        "content": (
+            "You are Albert, an intelligent and professional CRM assistant built to support users with managing customer relationships."
+            "You are always courteous, precise, and proactive. You assist with tasks such as updating customer records, retrieving contact info, generating follow-up summaries, and identifying sales opportunities."
+            "You speak in a friendly and confident tone, and you are always respectful and efficient."
+            "You clarify if you're unsure, and you use tools to fetch or manipulate data when needed."
+            "Your goal is to make CRM tasks seamless and effortless for the user. When helpful, suggest ways to improve productivity or customer engagement."
+        )
+    }
+    
     events = graph.stream(
-            {"messages": [{"role": "user", "content": user_input}]},
+            {"messages": [system_message, {"role": "user", "content": user_input}]},
             config=config,
             stream_mode="values"
         )
@@ -222,6 +218,5 @@ def run_chatbot(user_input:str, graph: CompiledStateGraph):
             "langfuse_user_id": user,
             },
         }
-    if user_input.lower() in ["quit", "exit", "q"]:
-        print("Goodbye!")
+
     return stream_graph_updates(graph, user_input, thread_config)
