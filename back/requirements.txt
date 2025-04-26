@@ -4,7 +4,6 @@ pydantic
 uvicorn[standard]
 
 # Misc
-numpy
 dotenv
 typing
 typing-extensions
@@ -22,7 +21,3 @@ langfuse
 
 # Database (Excel)
 openpyxl
-
-# Front
-streamlit
-requests
