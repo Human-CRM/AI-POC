@@ -1,4 +1,4 @@
-from openpyxl import Workbook, worksheet, load_workbook 
+from openpyxl import Workbook, load_workbook 
 
 def _load_database() -> Workbook:
     return load_workbook("./back/data/companies.xlsx")

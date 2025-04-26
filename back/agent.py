@@ -3,17 +3,15 @@ from typing import Annotated
 from typing_extensions import TypedDict
 
 # Framework
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langchain_anthropic import ChatAnthropic
-from langchain.prompts import PromptTemplate
 
 # Tools
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_core.tools import tool
-import datetime as dt
 from .excel_manager import get_companies, update_info
 
 # Memory
@@ -23,8 +21,6 @@ from langgraph.checkpoint.memory import MemorySaver
 from langfuse.callback import CallbackHandler
 
 # Misc
-from typing import Annotated
-from typing_extensions import TypedDict
 from dotenv import load_dotenv
 import os
 import requests
@@ -96,7 +92,7 @@ def enrich_company_info(domain:str, update_db: bool) -> dict:
         with open(f"./apollo/organizations/{domain.split('.')[0]}.json", "w") as f:
             json.dump(json.loads(response.text), f, indent=4)
         
-        if update_db == True:
+        if update_db:
             update_company_info_in_database(domain=domain, data=json.loads(response.text))
 
         return response.text
@@ -126,7 +122,7 @@ def get_company_info_from_database(domain:str, update_db: bool) -> dict:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         
-        if update_db == True:
+        if update_db:
             update_company_info_in_database(domain=domain, data=data)
 
         return data

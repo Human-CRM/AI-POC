@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
 
 from langgraph.graph import StateGraph
 
@@ -51,7 +50,7 @@ async def add_message(user_input: str):
             "sucess":"Sucessfully added message to database",
             "details":messages[msg_id]
             }
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
     
 @app.get("/companies/")

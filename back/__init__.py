@@ -1,1 +1,1 @@
-from .api import messages
+from .api import messages as messages

@@ -12,7 +12,7 @@ def load_messages():
     try:
         server_answer = requests.get(url=f"{base_url}/messages")
         raw_msg:dict = json.loads(server_answer.text)
-    except Exception as e:
+    except Exception:
         st.session_state["info_text"] = "Error parsing response"
         return
     
