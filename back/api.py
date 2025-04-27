@@ -14,6 +14,28 @@ import json
 #########################################
 
 messages = {}
+org_db = {
+  "id": {
+    "0": None,
+    "1": None
+  },
+  "name": {
+    "0": None,
+    "1": None
+  },
+  "domain": {
+    "0": "gatewatcher.com",
+    "1": "airfrance.fr"
+  },
+  "industry": {
+    "0": None,
+    "1": None
+  },
+  "phone": {
+    "0": None,
+    "1": None
+  }
+}
 
 #####################
 #                   #
@@ -31,6 +53,11 @@ graph: StateGraph = setup_graph()
 
 app = FastAPI()
 
+    #####################
+    #                   #
+    #       CHAT        #
+    #                   #
+    #####################
 
 @app.get("/messages/")
 async def retrieve_all_messages():
@@ -81,3 +108,20 @@ async def reset_messages():
         messages = {}
     else:
         raise HTTPException(status_code=404, detail="No message to delete")
+    
+
+    ##################
+    #                #
+    #       DB       #
+    #                #
+    ##################
+
+@app.get("/org_db")
+async def get_org_db():
+    global org_db
+    return org_db
+
+@app.put("/org_db")
+async def update_org_db(org_df: dict):
+    global org_db
+    org_db = org_df
