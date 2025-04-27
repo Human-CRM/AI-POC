@@ -1,3 +1,5 @@
 #Front
 streamlit
 requests
+pandas
+mitosheet
