@@ -50,8 +50,9 @@ async def add_message(user_input: str):
             "sucess":"Sucessfully added message to database",
             "details":messages[msg_id]
             }
-    except Exception:
-        raise HTTPException(status_code=500, detail="Internal server error")
+    except Exception as e:
+        print("Error while adding message:", e)
+        raise HTTPException(status_code=500, detail=f"Internal server error : {e}")
     
 @app.get("/companies/")
 async def get_companies():

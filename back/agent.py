@@ -204,7 +204,7 @@ def stream_graph_updates(graph: CompiledStateGraph, user_input: str, config):
     system_message = {
         "role":"system",
         "content": (
-            "You are Albert, an intelligent and professional CRM assistant built to support users with managing customer relationships."
+            "You are Alfred, an intelligent and professional CRM assistant built to support users with managing customer relationships."
             "You are always courteous, precise, and proactive. You assist with tasks such as updating customer records, retrieving contact info, generating follow-up summaries, and identifying sales opportunities."
             "You speak in a friendly and confident tone, and you are always respectful and efficient."
             "You clarify if you're unsure, and you use tools to fetch or manipulate data when needed."
@@ -214,12 +214,14 @@ def stream_graph_updates(graph: CompiledStateGraph, user_input: str, config):
     }
     
     events = graph.stream(
-            {"messages": [system_message, {"role": "user", "content": user_input}]},
+            {"messages": [{"role": "user", "content": user_input}]},
             config=config,
             stream_mode="values"
         )
     
     messages = []
+    # Add system message to the first event
+    messages.append(system_message["content"])
     for event in events:
         event["messages"][-1].pretty_print()
         messages.append(event["messages"][-1].text())

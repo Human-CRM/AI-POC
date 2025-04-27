@@ -22,7 +22,9 @@ def load_messages():
         for i in range(0, len(raw_msg)):
             s:str = str(raw_msg[f"{i}"])
             list_msg = eval(s)
-            st.session_state["info_text"] += list_msg[0] + "\n\n----------------------------\n\n" + list_msg[-1] + "\n\n----------------------------\n\n"
+
+            # list_msg[0] is the system message, list_msg[1] is the user message, list_msg[-1] is the assistant final message
+            st.session_state["info_text"] += list_msg[1] + "\n\n----------------------------\n\n" + list_msg[-1] + "\n\n----------------------------\n\n"
             #for msg in list_msg:
             #    st.session_state["info_text"] += msg + "\n\n"
             #st.session_state["info_text"] += "\n\n----------------------------\n\n"
