@@ -15,11 +15,26 @@ import json
 
 messages = {}
 org_db = {
-    "id": [],
-    "Name": [],
-    "Domain": [],
-    "Industry": [],
-    "Description": [],
+  "id": {
+    "0": None,
+    "1": None
+  },
+  "name": {
+    "0": None,
+    "1": None
+  },
+  "domain": {
+    "0": "gatewatcher.com",
+    "1": "airfrance.fr"
+  },
+  "industry": {
+    "0": None,
+    "1": None
+  },
+  "phone": {
+    "0": None,
+    "1": None
+  }
 }
 
 #####################
