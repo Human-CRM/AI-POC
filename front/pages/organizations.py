@@ -1,8 +1,13 @@
+import requests
+import json
+
 import pandas as pd
 import streamlit as st
 from mitosheet.streamlit.v1 import spreadsheet
 
 from albert_helper import albert
+
+base_url = "http://fastapi-app:8000"
 
 #########################
 #                       #
@@ -10,11 +15,12 @@ from albert_helper import albert
 #                       #
 #########################
 
-def load_spreadsheet(crm_data):
-    df = pd.DataFrame(crm_data)
+def load_spreadsheet():
+    df = st.session_state["org_df"]
     sheets, _ = spreadsheet(df)
     sheet_names = [name for name in dict(sheets).keys()]
     org_df = sheets[sheet_names[0]]
+    st.session_state["org_df"] = org_df
     return org_df
 
 
@@ -24,18 +30,17 @@ def add_row():
     st.session_state["org_df"] = df
 
 
-def remove_row(row_index):
-    df = st.session_state["org_df"]
-    if row_index >= 0 and row_index < len(df):
-        df = df.drop(row_index)
-    st.session_state["org_df"] = df
+def export_org_df():
+    org_df: pd.DataFrame = st.session_state["org_df"]
+    org_df_json = org_df.to_json()
+    requests.put(f"{base_url}/org_db", data=org_df_json)
 
 
-def get_org_df():
-    org_df = pd.DataFrame(st.session_state["org_df"])
-    org_df.dropna(axis=0, inplace=True)
-    return org_df
-
+def refresh_org_df():
+    response = requests.get(f"{base_url}/org_db")
+    if response.status_code==200:
+        st.session_state["org_df"] = pd.DataFrame(json.loads(response.text))
+        
 
 ##################################
 #                                #
@@ -48,16 +53,18 @@ st.header("CRM - Organizations")
 albert()
 
 if "org_df" not in st.session_state:
-    crm_data = {
-        "id": [],
-        "Name": [],
-        "Domain": [],
-        "Industry": [],
-        "Description": [],
-    }
-    st.session_state["org_df"] = pd.DataFrame(crm_data)
+    refresh_org_df()
 
+if "org_df" in st.session_state:
+    st.session_state["org_df"] = load_spreadsheet()
 
-st.session_state["org_df"] = load_spreadsheet(st.session_state["org_df"])
+col1, col2, col3 = st.columns(3)
 
-st.button(label="Add Row", on_click=add_row)
+with col1:
+    st.button(label="Add Row", on_click=add_row)
+
+with col2:
+    st.button(label="Export db", on_click=export_org_df)
+
+with col3:
+    st.button(label="Refresh db", on_click=refresh_org_df)
