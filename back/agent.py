@@ -53,11 +53,9 @@ def get_apollo_key():
 # Functions
 #
 
-def update_company_info_in_database(domain:str, data: dict):
+def update_company_info_in_CRM(domain:str, data: dict):
     """
-    Updates a given company info inside the database with the data passed as argument.
-    The company info to update is directly deduced from the data.
-    Data must come from enrich company info (from database or not)
+    Updates a given company info inside the CRM with the data passed as argument.
     """
     update_org_info(domain=domain, data=data)
 
@@ -66,7 +64,7 @@ def update_company_info_in_database(domain:str, data: dict):
 #
 
 @tool
-def enrich_company_info(domain:str, update_db: bool) -> dict:
+def enrich_company_info(domain:str, update_crm: bool) -> dict:
     """
     Function to properly enrich the company information using the apollo API.
     You can use this tool to get more information about the company you're looking for.
@@ -76,7 +74,7 @@ def enrich_company_info(domain:str, update_db: bool) -> dict:
     The domain needs to be of the following format: 'company.com'.
     Do not add www or http:// or https:// before the domain.
     If the tool returns an error, you can use the web search tool to get more information about the company or tell the user you can't find any information about the company.
-    Update_db boolean variable is set depending on rather or not you want to update the CRM with the info you recovered or not. Defaults to True.
+    Update_crm boolean variable is set depending on rather or not you want to update the CRM with the info you recovered or not. Defaults to True.
     """
     url = f"https://api.apollo.io/api/v1/organizations/enrich?domain={domain}"
 
@@ -92,8 +90,8 @@ def enrich_company_info(domain:str, update_db: bool) -> dict:
         with open(f"./apollo/organizations/{domain.split('.')[0]}.json", "w") as f:
             json.dump(json.loads(response.text), f, indent=4)
         
-        if update_db:
-            update_company_info_in_database(domain=domain, data=json.loads(response.text))
+        if update_crm:
+            update_company_info_in_CRM(domain=domain, data=json.loads(response.text))
 
         return response.text
     else:
@@ -101,13 +99,13 @@ def enrich_company_info(domain:str, update_db: bool) -> dict:
 
 
 @tool
-def get_company_info_from_database(domain:str, update_db: bool) -> dict:
+def enrich_company_info_from_database(domain:str, update_crm: bool) -> dict:
     """
     Cheaper function than enrich_company_info to get the company information.
     Use this function before using the enrich_company_info function.
     You can use this tool to get more information about the company you're looking for.
     When the user asks you to enrich a company information, you can use this tool to get more information about the company.
-    Update_db boolean variable is set depending on rather or not you want to update the CRM with the info you recovered or not. Defaults to True.
+    Update_crm boolean variable is set depending on rather or not you want to update the CRM with the info you recovered or not. Defaults to True.
     """
     domain_split = domain.split(".")[0]
     FOLDER_PATH = Path("apollo/organizations")
@@ -122,8 +120,8 @@ def get_company_info_from_database(domain:str, update_db: bool) -> dict:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         
-        if update_db:
-            update_company_info_in_database(domain=domain, data=data)
+        if update_crm:
+            update_company_info_in_CRM(domain=domain, data=data)
 
         return data
     except (json.JSONDecodeError, IOError):
@@ -133,10 +131,10 @@ def get_company_info_from_database(domain:str, update_db: bool) -> dict:
 
 
 @tool
-def get_companies_in_database() -> list[str]:
+def get_companies_in_CRM() -> list[str]:
     """
-    To retrieve the list of companies that you have in your database.
-    The function returns a list of domains of companies in your database.
+    To retrieve the list of companies that you have in the user's CRM.
+    The function returns a list of domains of companies in your CRM.
     """
     return get_companies()
 
@@ -144,7 +142,7 @@ def get_companies_in_database() -> list[str]:
 def create_tools() -> list:
     load_dotenv()
     web_search_tool = TavilySearchResults(max_results=2)
-    return [web_search_tool, get_companies_in_database, get_company_info_from_database, enrich_company_info]
+    return [web_search_tool, get_companies_in_CRM, enrich_company_info_from_database, enrich_company_info]
 
 
 class State(TypedDict):
