@@ -1,5 +1,6 @@
 import requests
 import json
+import random
 
 import pandas as pd
 import streamlit as st
@@ -17,7 +18,8 @@ base_url = "http://fastapi-app:8000"
 
 def load_spreadsheet():
     df = st.session_state["org_df"]
-    sheets, _ = spreadsheet(df)
+    sheet_key = st.session_state.get("mito_key", "initial")
+    sheets, _ = spreadsheet(df, key=sheet_key)
     sheet_names = [name for name in dict(sheets).keys()]
     org_df = sheets[sheet_names[0]]
     st.session_state["org_df"] = org_df
@@ -40,6 +42,8 @@ def refresh_org_df():
     response = requests.get(f"{base_url}/org_db")
     if response.status_code==200:
         st.session_state["org_df"] = pd.DataFrame(json.loads(response.text))
+        # Change mito_key to force spreadsheet reload
+        st.session_state["mito_key"] = str(random.randint(0, 1000000))
         
 
 ##################################

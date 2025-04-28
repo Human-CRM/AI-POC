@@ -42,7 +42,7 @@ def albert():
     with st.sidebar:
         st.header("ALFRED - HELPER")
         with st.container(height=400, border=True):
-            st.markdown(st.session_state['info_text'])
+            st.markdown(st.session_state.get("info_text", "Messages not retrieved"))
 
         with st.form(key="message_form", clear_on_submit=True):
             st.text_area(label="Message", key="user_input")

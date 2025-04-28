@@ -12,7 +12,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_core.tools import tool
-from .excel_manager import get_companies, update_info
+from .excel_manager import get_companies, update_org_info
 
 # Memory
 from langgraph.checkpoint.memory import MemorySaver
@@ -59,7 +59,7 @@ def update_company_info_in_database(domain:str, data: dict):
     The company info to update is directly deduced from the data.
     Data must come from enrich company info (from database or not)
     """
-    update_info(domain=domain, data=data)
+    update_org_info(domain=domain, data=data)
 
 #
 # Tools

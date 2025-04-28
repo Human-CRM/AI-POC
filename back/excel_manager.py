@@ -10,7 +10,7 @@ def get_companies() -> list[str]:
         return [f"Error retrieving companies: {e}"]
 
 
-def update_info(domain: str, data: dict):
+def update_org_info(domain: str, data: dict):
     try:
         from .api import org_db
         id = list(org_db["domain"].keys())[list(org_db["domain"].values()).index(domain)]
@@ -22,11 +22,11 @@ def update_info(domain: str, data: dict):
                     if key == "industry":
                         try:
                             org_db[key][str(id)] = data["organization"]["industries"][0]
-                        except:
-                            org_db[key][str(id)] = "Error"
+                        except Exception as e:
+                            org_db[key][str(id)] = f"[ERROR @ key == industry] {e}"
                     else:
                         org_db[key][str(id)] = data["organization"][key]
-                except:
+                except Exception:
                     continue
                 
             print(f"Updated data for {domain} successfully!")
