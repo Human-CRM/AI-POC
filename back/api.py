@@ -37,6 +37,25 @@ org_db = {
   }
 }
 
+people_db = {
+  "id": {
+    "0": None,
+    "1": None
+  },
+  "name": {
+    "0": None,
+    "1": None
+  },
+  "phone": {
+    "0": None,
+    "1": None
+  },
+  "linkedin": {
+      "0": None,
+      "1": None,
+  }
+}
+
 #####################
 #                   #
 #       MODELS      #
@@ -125,3 +144,13 @@ async def get_org_db():
 async def update_org_db(org_df: dict):
     global org_db
     org_db = org_df
+
+@app.get("/people_db")
+async def get_people_db():
+    global people_db
+    return people_db
+
+@app.put("/people_db")
+async def update_people_db(people_df: dict):
+    global people_db
+    people_db = people_df
