@@ -42,15 +42,23 @@ people_db = {
     "0": None,
     "1": None
   },
-  "name": {
+  "first_name": {
     "0": None,
     "1": None
+  },
+  "last_name": {
+      "0": None,
+      "1": None
+  },
+  "email": {
+      "0": "joshua.garrison@apollo.io",
+      "1": None
   },
   "phone": {
     "0": None,
     "1": None
   },
-  "linkedin": {
+  "linkedin_url": {
       "0": None,
       "1": None,
   }
