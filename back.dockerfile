@@ -26,6 +26,7 @@ COPY --from=builder /install /usr/local
 
 # Copy your app code
 COPY back ./back
-COPY basic_json ./apollo/organizations
+COPY org_json ./apollo/organizations
+COPY people_json ./apollo/people
 
 CMD ["python", "back"]

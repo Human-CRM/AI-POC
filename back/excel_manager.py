@@ -36,4 +36,27 @@ def update_org_info(domain: str, data: dict):
             raise Exception("Domain not found!")
 
     except Exception as e:
-        print(f"[ERROR @ excel_manager/update_info()] {e}")
+        print(f"[ERROR @ excel_manager/update_org_info()] {e}")
+
+
+def update_person_info(email: str, data: dict):
+    try:
+        from .api import people_db
+        id = list(people_db["email"].keys())[list(people_db["email"].values()).index(email)]
+
+        # If the domain index was found, proceed with updating values
+        if id is not None:
+            for key in people_db.keys():
+                try:
+                    people_db[key][str(id)] = data["person"][key]
+                except Exception:
+                    continue
+                
+            print(f"Updated data for {email} successfully!")
+
+        else:
+            print(f"Email {email} not found!")
+            raise Exception("Email not found!")
+
+    except Exception as e:
+        print(f"[ERROR @ excel_manager/update_person_info()] {e}")

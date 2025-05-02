@@ -12,7 +12,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_core.tools import tool
-from .excel_manager import get_companies, update_org_info
+from .excel_manager import get_companies, update_org_info, update_person_info
 
 # Memory
 from langgraph.checkpoint.memory import MemorySaver
@@ -59,22 +59,95 @@ def update_company_info_in_CRM(domain:str, data: dict):
     """
     update_org_info(domain=domain, data=data)
 
+
+def update_person_info_in_CRM(email:str, data: dict):
+    """
+    Updates a given company info inside the CRM with the data passed as argument.
+    """
+    update_person_info(email=email, data=data)   
+
 #
 # Tools
 #
+@tool
+def enrich_person_info(email: str, update_crm: bool) -> dict:
+    """
+    Tool to enrich someone's information using the apollo API.
+    Only use this function if the person is not in the database.
+    Only use this function after using the get_person_info_from_database function.
+    This tool is better than web search to retrieve company info.
+    If the tool returns an error, tell the user you can't find any information about the company.
+    Update_crm boolean variable is set depending on rather or not you want to update the CRM with the info you recovered
+    or not. Defaults to True.
+    """
+    url = f"https://api.apollo.io/api/v1/people/match?email={email}"
+
+    headers = {
+        "accept": "application/json",
+        "Cache-Control": "no-cache",
+        "Content-Type": "application/json",
+        "x-api-key": get_apollo_key(),
+    }
+    
+    response = requests.post(url, headers=headers)
+    if response.status_code == 200:
+        with open(f"./apollo/organizations/{email}.json", "w") as f:
+            json.dump(json.loads(response.text), f, indent=4)
+        
+        if update_crm:
+            update_person_info_in_CRM(email=email, data=json.loads(response.text))
+
+        return response.text
+    else:
+        return {"error": f"Error: {response.status_code}"}
+
+
+@tool
+def enrich_person_info_from_database(email:str, update_crm: bool) -> dict:
+    """
+    Cheaper function than enrich_person_info to get the person's information.
+    Use this function before using the enrich_person_info function.
+    You can use this tool to get more information about the person you're looking for.
+    When the user asks you to enrich a person information, you can use this tool to get more information about the
+    person.
+    Update_crm boolean variable is set depending on rather or not you want to update the CRM with the info you recovered
+    or not. Defaults to True.
+    """
+    FOLDER_PATH = Path("apollo/people")
+    file_path = FOLDER_PATH / f"{email}.json"
+
+    if not file_path.exists():
+        return {
+            "error": f"Email '{email}' is not in the database."
+        }
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        if update_crm:
+            update_person_info_in_CRM(email=email, data=data)
+
+        return data
+    except (json.JSONDecodeError, IOError):
+        return {
+            "error": f"Failed to load data for email '{email}'."
+        }
+
 
 @tool
 def enrich_company_info(domain:str, update_crm: bool) -> dict:
     """
     Function to properly enrich the company information using the apollo API.
-    You can use this tool to get more information about the company you're looking for.
     Only use this function if the company is not in the database.
     Only use this function after using the get_company_info_from_database function.
     This tool is better than web search to retrieve company info.
     The domain needs to be of the following format: 'company.com'.
     Do not add www or http:// or https:// before the domain.
-    If the tool returns an error, you can use the web search tool to get more information about the company or tell the user you can't find any information about the company.
-    Update_crm boolean variable is set depending on rather or not you want to update the CRM with the info you recovered or not. Defaults to True.
+    If the tool returns an error, you can use the web search tool to get more information about the company or tell the
+    user you can't find any information about the company.
+    Update_crm boolean variable is set depending on rather or not you want to update the CRM with the info you recovered
+    or not. Defaults to True.
     """
     url = f"https://api.apollo.io/api/v1/organizations/enrich?domain={domain}"
 
@@ -142,7 +215,14 @@ def get_companies_in_CRM() -> list[str]:
 def create_tools() -> list:
     load_dotenv()
     web_search_tool = TavilySearchResults(max_results=2)
-    return [web_search_tool, get_companies_in_CRM, enrich_company_info_from_database, enrich_company_info]
+    return [
+        web_search_tool,
+        get_companies_in_CRM,
+        enrich_person_info_from_database,
+        enrich_person_info,
+        enrich_company_info_from_database,
+        enrich_company_info
+    ]
 
 
 class State(TypedDict):
