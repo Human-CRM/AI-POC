@@ -29,9 +29,9 @@ services:
     build:
       context: .
       dockerfile: front.dockerfile
-    container_name: streamlit-app
+    container_name: reflex-app
     ports:
-      - "8501:8501"
+      - "3000:3000"
     networks:
       - my-network
 
