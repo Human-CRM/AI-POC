@@ -1,5 +1,4 @@
 #Front
-streamlit
 requests
 pandas
-mitosheet
+reflex==0.7.9

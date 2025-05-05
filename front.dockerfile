@@ -21,9 +21,16 @@ FROM python:3.12-slim-bullseye
 
 WORKDIR /app
 
+# Install reflex dependencies
+RUN apt update && apt install -y --no-install-recommends \
+    unzip \
+    curl
+
 # Copy only the installed packages
 COPY --from=builder /install /usr/local
 
 COPY front ./front
 
-CMD ["python", "front"]
+WORKDIR /app/front
+
+CMD ["reflex", "run", "--frontend-only"]
