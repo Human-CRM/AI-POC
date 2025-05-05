@@ -1,6 +1,0 @@
-app_name: rxapp
-frontend:
-  port: 3000
-backend:
-  host: backend
-  port: 8001
