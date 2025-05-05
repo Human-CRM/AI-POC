@@ -1,6 +1,7 @@
 import reflex as rx
 from rxapp.components.alfred import alfred_sidebar
 
+
 def people():
     return rx.hstack(
         rx.box(
