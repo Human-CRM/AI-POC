@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from pathlib import Path
+import json
+import ast
 
+from fastapi import FastAPI, HTTPException
 from langgraph.graph import StateGraph
 
 from .agent import setup_graph, run_chatbot
-
-from pathlib import Path
-import json
 
 #########################################
 #                                       #
@@ -87,9 +87,19 @@ app = FastAPI()
     #####################
 
 @app.get("/messages/")
-async def retrieve_all_messages():
+async def retrieve_all_messages() -> list:
     if messages and len(messages) > 0:
-        return messages
+        parsed_messages = {}
+        messages_to_return = []
+        for key in messages.keys():
+            try:
+                parsed_messages[key] = ast.literal_eval(messages[key])
+                messages_to_return.append(parsed_messages[key][1])  # Return user message and ai final message
+                messages_to_return.append(parsed_messages[key][-1])  # Return user message and ai final message
+            except Exception as e:
+                print(f"Error while parsing message {key}: {e}")
+                continue
+        return messages_to_return
     else:
         raise HTTPException(status_code=404, detail="No message could be found")
 
