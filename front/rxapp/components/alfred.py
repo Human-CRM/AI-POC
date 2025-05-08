@@ -10,40 +10,43 @@ settings = Settings()
 
 class AlfredState(rx.State):
     
-    messages = ["Send a message to ALFRED :)"]
+    base_message = "Send a message to ALFRED :)"
+    messages = [base_message]
     debug = ""
-    user_input = ""
 
+    # Those need async !
+
+    @rx.event
     def get_messages(self):
+        if self.messages[0] == self.base_message:
+            self.messages.pop(0)
+
         response = requests.get(f"{settings.FAST_API_URL}/messages")
-        self.messages = []
         if response.status_code == 200:
             fetched_messages = json.loads(response.text)
             self.debug += f"\n\nFetched messages: {fetched_messages}"
-            for message in fetched_messages:
-                self.messages.append(message)
+            self.messages.append(fetched_messages[-1])
         else:
             self.messages = ["No messages found."]
 
-    def send_message(self):
-        response = requests.post(f"{settings.FAST_API_URL}/messages/?user_input={self.user_input.strip()}")
+    @rx.event
+    def send_message(self, form_data: dict):
+        user_input = str(form_data["user_input"])
+        self.messages.append(user_input.strip())
+        response = requests.post(f"{settings.FAST_API_URL}/messages/?user_input={user_input.strip()}")
         if response.status_code == 200:
-            self.debug = f"Message sent: {self.user_input.strip()}"
-            self.user_input = ""
+            self.debug = f"Message sent: {user_input.strip()}"
         else:
             self.debug = f"Error sending message: {response.text}"
         self.get_messages()
 
-    def send_on_key_down(self, event):
-        if event == "Enter" and self.user_input.strip() != "":
-            self.send_message()
 
 def alfred_sidebar():
     return rx.container(
         rx.vstack(
-            rx.heading("ALFRED - HELPER", mb="4"),
+            rx.heading("ALFRED - HELPER"),
             
-            # Message display area with scroll - using index instead of zip
+            # Message display area with scroll
             rx.box(
                 rx.foreach(
                     AlfredState.messages,
@@ -51,7 +54,7 @@ def alfred_sidebar():
                         rx.box(
                             rx.text(
                                 message,
-                                font_size="14px",
+                                font_size="22px",
                                 color=rx.cond(index % 2 == 0, "grey", "black"),
                             ),
                             max_width="75%",
@@ -71,33 +74,33 @@ def alfred_sidebar():
             ),
             
             # Message input with auto-expand and Enter key functionality
-            rx.vstack(
-                rx.text_area(
-                    placeholder="Type your message here...",
-                    value=AlfredState.user_input,
-                    on_change=AlfredState.set_user_input,
-                    # Handle Enter key press (without shift)
-                    on_key_down=AlfredState.send_on_key_down,
-                    width="100%",
-                    min_height="60px",
-                    padding="10px",
-                    border_radius="8px",
-                    resize="vertical",  # Allow vertical resizing
-                    rows=str(3),  # Default rows
+            rx.form(
+                rx.vstack(
+                    rx.text_area(
+                        placeholder="Type your message here...",
+                        name="user_input",
+                        
+                        size="3",
+                        width="100%",
+                        min_height="60px",
+                        padding="10px",
+                        radius="large",
+                        resize="vertical",  # Allow vertical resizing
+                        rows="2",  # Default rows
+                    ),
+                    rx.button(
+                        rx.text("Send", font_weight="bold", font_size="16", color="white"),
+                        type="submit",
+                        color_scheme="tomato", 
+                        width="100%",
+                    ),
+                    width="100%",  
                 ),
-                rx.button(
-                    "Send Message", 
-                    color_scheme="blue", 
-                    on_click=AlfredState.send_message, 
-                    width="100%",
-                    is_disabled=AlfredState.user_input.strip() == "",  # Disable if empty
-                ),
-                width="100%",
-                spacing="2",
-                pt="2",
+                on_submit=AlfredState.send_message,
+                reset_on_submit=True, 
             ),
-            
 
+            rx.divider(),
             rx.box(
                 rx.text("Debug Info:", font_weight="bold", color="red"),
                 rx.text(AlfredState.debug, font_size="12px", color="red"),
@@ -112,7 +115,7 @@ def alfred_sidebar():
             width="100%",
             align_items="stretch",
         ),
-        max_width="800px",
+        width="600px",
         background="white",
         border_right="1px solid #eee",
         padding="20px",
