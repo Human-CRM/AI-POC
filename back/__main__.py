@@ -19,4 +19,4 @@ if not os.path.exists("apollo/organizations"):
 else:
     print("Apollo/organizations directory already exists.")
 
-subprocess.run(["fastapi", "run", "./back/api.py", "--host", "0.0.0.0"])
+subprocess.run(["fastapi", "run", "./back/api.py", "--port", "8000"])

@@ -3,3 +3,4 @@ aipocEnv
 .env
 .ruff_cache
 all_jsons/
+.vscode

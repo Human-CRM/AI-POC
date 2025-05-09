@@ -15,22 +15,24 @@ RUN apt update && apt install -y --no-install-recommends \
 COPY ./front/requirements.txt .
 RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-
 # Final lightweight image
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim
 
 WORKDIR /app
 
 # Install reflex dependencies
 RUN apt update && apt install -y --no-install-recommends \
     unzip \
-    curl
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy only the installed packages
 COPY --from=builder /install /usr/local
 
+# Copy the app
 COPY front ./front
 
 WORKDIR /app/front
 
-CMD ["reflex", "run", "--frontend-only"]
+# Run the reflex app with explicit host binding
+CMD ["reflex", "run", "--backend-host", "0.0.0.0"]

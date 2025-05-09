@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from pathlib import Path
+import json
+import ast
 
+from fastapi import FastAPI, HTTPException
 from langgraph.graph import StateGraph
 
 from .agent import setup_graph, run_chatbot
-
-from pathlib import Path
-import json
 
 #########################################
 #                                       #
@@ -34,6 +34,10 @@ org_db = {
   "phone": {
     "0": None,
     "1": None
+  },
+  "short_description": {
+      "0": None,
+      "1": None
   }
 }
 
@@ -52,7 +56,7 @@ people_db = {
   },
   "email": {
       "0": "joshua.garrison@apollo.io",
-      "1": None
+      "1": "hugo.bonnell@gatewatcher.com"
   },
   "phone": {
     "0": None,
@@ -87,9 +91,19 @@ app = FastAPI()
     #####################
 
 @app.get("/messages/")
-async def retrieve_all_messages():
+async def retrieve_all_messages() -> list:
     if messages and len(messages) > 0:
-        return messages
+        parsed_messages = {}
+        messages_to_return = []
+        for key in messages.keys():
+            try:
+                parsed_messages[key] = ast.literal_eval(messages[key])
+                messages_to_return.append(parsed_messages[key][1])  # Return user message and ai final message
+                messages_to_return.append(parsed_messages[key][-1])  # Return user message and ai final message
+            except Exception as e:
+                print(f"Error while parsing message {key}: {e}")
+                continue
+        return messages_to_return
     else:
         raise HTTPException(status_code=404, detail="No message could be found")
 
@@ -148,17 +162,32 @@ async def get_org_db():
     global org_db
     return org_db
 
-@app.put("/org_db")
-async def update_org_db(org_df: dict):
+
+@app.post("/org_db")
+async def add_org_to_db(org_domain: str):
     global org_db
-    org_db = org_df
+    keys = list(org_db.keys())
+    id = len(org_db[keys[0]])
+    for key in keys:
+        if key == "domain":
+            org_db[key][str(id)] = org_domain
+        else:
+            org_db[key][str(id)] = None
+
 
 @app.get("/people_db")
 async def get_people_db():
     global people_db
     return people_db
 
-@app.put("/people_db")
-async def update_people_db(people_df: dict):
+
+@app.post("/people_db")
+async def add_person_to_db(email: str):
     global people_db
-    people_db = people_df
+    keys = list(people_db.keys())
+    id = len(people_db[keys[0]])
+    for key in keys:
+        if key == "email":
+            people_db[key][str(id)] = email
+        else:
+            people_db[key][str(id)] = None
