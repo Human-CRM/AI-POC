@@ -56,7 +56,7 @@ people_db = {
   },
   "email": {
       "0": "joshua.garrison@apollo.io",
-      "1": None
+      "1": "hugo.bonnell@gatewatcher.com"
   },
   "phone": {
     "0": None,
@@ -162,10 +162,6 @@ async def get_org_db():
     global org_db
     return org_db
 
-@app.put("/org_db")
-async def update_org_db(org_df: dict):
-    global org_db
-    org_db = org_df
 
 @app.post("/org_db")
 async def add_org_to_db(org_domain: str):
@@ -184,7 +180,14 @@ async def get_people_db():
     global people_db
     return people_db
 
-@app.put("/people_db")
-async def update_people_db(people_df: dict):
+
+@app.post("/people_db")
+async def add_person_to_db(email: str):
     global people_db
-    people_db = people_df
+    keys = list(people_db.keys())
+    id = len(people_db[keys[0]])
+    for key in keys:
+        if key == "email":
+            people_db[key][str(id)] = email
+        else:
+            people_db[key][str(id)] = None
