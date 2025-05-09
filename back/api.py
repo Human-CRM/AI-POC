@@ -1,11 +1,13 @@
 from pathlib import Path
 import json
 import ast
+import requests
 
 from fastapi import FastAPI, HTTPException
 from langgraph.graph import StateGraph
 
-from .agent import setup_graph, run_chatbot
+from .agent import setup_graph, run_chatbot, get_apollo_key
+from .excel_manager import update_org_info
 
 #########################################
 #                                       #
@@ -107,13 +109,17 @@ async def retrieve_all_messages() -> list:
     else:
         raise HTTPException(status_code=404, detail="No message could be found")
 
+
 @app.post("/messages/")
-async def add_message(user_input: str):
+async def add_message(user_input: str, save_db: bool = True):
     try:
         msg_id = 0
         if len(messages) > 0:
             msg_id = len(messages)
-        messages[msg_id] = str(run_chatbot(user_input, graph))
+        if save_db:
+            messages[msg_id] = str(run_chatbot(user_input, graph))
+        else:
+            return str(run_chatbot(user_input, graph))
         return {
             "sucess":"Sucessfully added message to database",
             "details":messages[msg_id]
@@ -121,7 +127,8 @@ async def add_message(user_input: str):
     except Exception as e:
         print("Error while adding message:", e)
         raise HTTPException(status_code=500, detail=f"Internal server error : {e}")
-    
+
+
 @app.get("/companies/")
 async def get_companies():
     FOLDER_PATH = Path("apollo/organizations")
@@ -174,6 +181,49 @@ async def add_org_to_db(org_domain: str):
         else:
             org_db[key][str(id)] = None
 
+
+def enrich_company_info_from_database(domain:str) -> dict:
+    domain_split = domain.split(".")[0]
+    FOLDER_PATH = Path("apollo/organizations")
+    file_path = FOLDER_PATH / f"{domain_split}.json"
+
+    if not file_path.exists():
+        return {"error": f"Company '{domain}' is not in the database."}
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        update_org_info(domain=domain, data=data)
+        return data
+    except (json.JSONDecodeError, IOError):
+        return {"error": f"Failed to load data for company '{domain}'."}
+
+def enrich_company_info(domain:str) -> dict:
+    url = f"https://api.apollo.io/api/v1/organizations/enrich?domain={domain}"
+    headers = {
+        "accept": "application/json",
+        "Cache-Control": "no-cache",
+        "Content-Type": "application/json",
+        "x-api-key": get_apollo_key(),
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        if "organization" in json.loads(response.text):
+            with open(f"./apollo/organizations/{domain.split('.')[0]}.json", "w") as f:
+                json.dump(json.loads(response.text), f, indent=4)
+            update_org_info(domain=domain, data=json.loads(response.text))
+            return json.loads(response.text)    
+    return {"error": f"Error: {response.status_code} | {response.text}"}
+
+@app.put("/org_db")
+async def enhance_db(org_domain: str):
+    database_enrich = enrich_company_info_from_database(org_domain)
+    if "error" in database_enrich.keys():
+        enrich = enrich_company_info(org_domain)
+        if "organization" in enrich.keys():
+            return f"Success enhancing {org_domain} via APOLLO"
+        else:
+            return f"Failed to enhance {org_domain}"
+    return f"Sucess enhancing {org_domain} via DATABASE"
 
 @app.get("/people_db")
 async def get_people_db():
