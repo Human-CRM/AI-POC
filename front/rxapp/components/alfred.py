@@ -54,7 +54,7 @@ def alfred_sidebar():
                         rx.box(
                             rx.text(
                                 message,
-                                font_size="22px",
+                                font_size="16px",
                                 color=rx.cond(index % 2 == 0, "grey", "black"),
                             ),
                             max_width="75%",
@@ -115,7 +115,6 @@ def alfred_sidebar():
             width="100%",
             align_items="stretch",
         ),
-        width="600px",
         background="white",
         border_right="1px solid #eee",
         padding="20px",

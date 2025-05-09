@@ -34,6 +34,10 @@ org_db = {
   "phone": {
     "0": None,
     "1": None
+  },
+  "short_description": {
+      "0": None,
+      "1": None
   }
 }
 
@@ -162,6 +166,18 @@ async def get_org_db():
 async def update_org_db(org_df: dict):
     global org_db
     org_db = org_df
+
+@app.post("/org_db")
+async def add_org_to_db(org_domain: str):
+    global org_db
+    keys = list(org_db.keys())
+    id = len(org_db[keys[0]])
+    for key in keys:
+        if key == "domain":
+            org_db[key][str(id)] = org_domain
+        else:
+            org_db[key][str(id)] = None
+
 
 @app.get("/people_db")
 async def get_people_db():
